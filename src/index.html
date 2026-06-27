@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>墨弈 · 围棋</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=ZCOOL+XiaoWei&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0a07;
+    --bg-2: #1a1209;
+    --board: #d4a76a;
+    --board-dark: #b8894a;
+    --line: rgba(30, 20, 10, 0.85);
+    --accent: #c93838;
+    --gold: #d4a020;
+    --jade: #6b8e4e;
+    --fg: #e8d9c0;
+    --muted: #8a7960;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans SC', sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    min-height: 100vh;
+    overflow-x: hidden;
+    margin: 0;
+  }
+
+  .display-font {
+    font-family: 'ZCOOL XiaoWei', serif;
+  }
+
+  /* 整体氛围背景 */
+  .bg-texture {
+    background:
+      radial-gradient(ellipse at 20% 0%, rgba(212, 167, 106, 0.10), transparent 50%),
+      radial-gradient(ellipse at 80% 100%, rgba(201, 56, 56, 0.08), transparent 50%),
+      radial-gradient(ellipse at 50% 50%, rgba(107, 142, 78, 0.04), transparent 70%),
+      linear-gradient(180deg, #0f0a07 0%, #15100a 50%, #1a1209 100%);
+    position: relative;
+  }
+
+  /* 浮动墨晕 */
+  .ink-blob {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.18;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .ink-blob.b1 {
+    width: 500px; height: 500px;
+    background: #c93838;
+    top: -120px; left: -120px;
+    animation: float1 18s ease-in-out infinite;
+  }
+  .ink-blob.b2 {
+    width: 400px; height: 400px;
+    background: #d4a020;
+    bottom: -80px; right: -80px;
+    animation: float2 22s ease-in-out infinite;
+  }
+  .ink-blob.b3 {
+    width: 300px; height: 300px;
+    background: #6b8e4e;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0.08;
+    animation: float3 25s ease-in-out infinite;
+  }
+  @keyframes float1 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(60px, 40px) scale(1.15); }
+  }
+  @keyframes float2 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(-40px, -50px) scale(0.9); }
+  }
+  @keyframes float3 {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); }
+    50% { transform: translate(-40%, -55%) scale(1.2); }
+  }
+
+  /* 棋盘容器 */
+  .board-wrap {
+    position: relative;
+    background:
+      radial-gradient(ellipse at 30% 20%, #e0b378 0%, transparent 60%),
+      linear-gradient(135deg, #d4a76a 0%, #c8954d 50%, #b0823c 100%);
+    border-radius: 10px;
+    box-shadow:
+      0 30px 80px -20px rgba(0,0,0,0.8),
+      0 0 0 1px rgba(80, 50, 20, 0.6),
+      inset 0 2px 0 rgba(255, 230, 180, 0.35),
+      inset 0 -2px 0 rgba(60, 30, 10, 0.4);
+    padding: 18px;
+    width: 100%;
+    max-width: 720px;
+    aspect-ratio: 1;
+  }
+
+  .board-wrap::before {
+    content: '';
+    position: absolute;
+    inset: 6px;
+    border-radius: 6px;
+    border: 1px solid rgba(60, 30, 10, 0.25);
+    pointer-events: none;
+  }
+
+  canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    cursor: crosshair;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* 面板 */
+  .panel {
+    background: linear-gradient(180deg, rgba(26, 18, 9, 0.7), rgba(15, 10, 7, 0.5));
+    border: 1px solid rgba(212, 167, 106, 0.18);
+    backdrop-filter: blur(12px);
+    border-radius: 14px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(212, 167, 106, 0.4), transparent);
+  }
+
+  /* 按钮 */
+  .btn {
+    background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(0,0,0,0.15));
+    border: 1px solid rgba(212, 167, 106, 0.22);
+    color: var(--fg);
+    padding: 10px 14px;
+    border-radius: 7px;
+    transition: all 0.2s;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    width: 100%;
+  }
+  .btn:hover {
+    background: linear-gradient(180deg, rgba(212, 167, 106, 0.18), rgba(212, 167, 106, 0.05));
+    border-color: rgba(212, 167, 106, 0.55);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(212, 167, 106, 0.15);
+  }
+  .btn:active { transform: translateY(0); }
+
+  .btn-primary {
+    background: linear-gradient(180deg, #d04040, #a02828);
+    border-color: rgba(201, 56, 56, 0.5);
+    color: #ffeaea;
+  }
+  .btn-primary:hover {
+    background: linear-gradient(180deg, #e05050, #b03030);
+    border-color: rgba(201, 56, 56, 0.8);
+    box-shadow: 0 4px 16px rgba(201, 56, 56, 0.3);
+  }
+
+  .size-btn.active {
+    background: linear-gradient(180deg, rgba(212, 160, 32, 0.25), rgba(212, 160, 32, 0.08));
+    border-color: rgba(212, 160, 32, 0.6);
+    color: #ffd560;
+    box-shadow: inset 0 0 12px rgba(212, 160, 32, 0.15);
+  }
+
+  /* 棋手指示器 */
+  .player-indicator {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    position: relative;
+    transition: all 0.3s;
+    flex-shrink: 0;
+  }
+  .player-indicator.black {
+    background: radial-gradient(circle at 35% 28%, #5a4530, #1a1410 55%, #000 100%);
+    box-shadow:
+      0 4px 14px rgba(0,0,0,0.7),
+      inset -3px -3px 6px rgba(0,0,0,0.6),
+      inset 2px 2px 4px rgba(255,255,255,0.08);
+  }
+  .player-indicator.white {
+    background: radial-gradient(circle at 35% 28%, #ffffff, #f0e4d0 50%, #b8a888 100%);
+    box-shadow:
+      0 4px 14px rgba(0,0,0,0.4),
+      inset -3px -3px 6px rgba(120,100,70,0.3),
+      inset 2px 2px 4px rgba(255,255,255,0.6);
+  }
+  .player-indicator.active::after {
+    content: '';
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 2px solid var(--accent);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(1.08); }
+  }
+
+  /* 统计块 */
+  .stat-box {
+    background: linear-gradient(180deg, rgba(0,0,0,0.4), rgba(0,0,0,0.2));
+    border: 1px solid rgba(212, 167, 106, 0.1);
+    border-radius: 8px;
+    padding: 10px 8px;
+    text-align: center;
+  }
+
+  /* 棋谱标签 */
+  .move-tag {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-family: 'Courier New', monospace;
+    font-weight: 600;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(212, 167, 106, 0.15);
+    white-space: nowrap;
+  }
+  .move-tag.b { color: #ffd560; border-color: rgba(212, 160, 32, 0.3); }
+  .move-tag.w { color: #f5ede0; border-color: rgba(245, 237, 224, 0.3); }
+
+  /* 滚动条 */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+  ::-webkit-scrollbar-thumb { background: rgba(212, 167, 106, 0.35); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(212, 167, 106, 0.5); }
+
+  kbd {
+    background: rgba(212, 167, 106, 0.12);
+    border: 1px solid rgba(212, 167, 106, 0.3);
+    padding: 2px 7px;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    color: #d4a76a;
+    margin-right: 6px;
+  }
+
+  /* 顶部装饰线 */
+  .ornament-line {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(212, 167, 106, 0.4), transparent);
+  }
+
+  /* 状态文字微动效 */
+  .status-text {
+    transition: all 0.3s;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: rgba(15, 10, 7, 0.95);
+    color: var(--fg);
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: 1px solid rgba(212, 167, 106, 0.3);
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+    opacity: 0;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    letter-spacing: 0.05em;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  .toast.error { border-color: rgba(201, 56, 56, 0.6); color: #ffb0b0; }
+  .toast.success { border-color: rgba(107, 142, 78, 0.6); color: #c0e0a0; }
+
+  /* 棋盘下方状态条 */
+  .status-bar {
+    background: linear-gradient(180deg, rgba(26, 18, 9, 0.6), rgba(15, 10, 7, 0.4));
+    border: 1px solid rgba(212, 167, 106, 0.15);
+    border-radius: 10px;
+    padding: 12px 20px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+  }
+</style>
+</head>
+<body class="bg-texture">
+  <div class="ink-blob b1"></div>
+  <div class="ink-blob b2"></div>
+  <div class="ink-blob b3"></div>
+
+  <main class="relative z-10 max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8">
+    <!-- 标题区 -->
+    <header class="flex items-end justify-between mb-6 md:mb-8 flex-wrap gap-4">
+      <div>
+        <div class="text-xs tracking-[0.5em] text-amber-200/40 mb-2">MO YI · GO BOARD</div>
+        <h1 class="display-font text-5xl md:text-6xl text-amber-100" style="letter-spacing: 0.12em; text-shadow: 0 2px 20px rgba(212, 167, 106, 0.3);">墨弈</h1>
+        <p class="text-sm text-amber-200/50 mt-2 tracking-wider">一子千秋 · 黑白方寸</p>
+      </div>
+      <div class="text-right">
+        <div class="text-xs text-amber-200/40 tracking-wider">第 <span id="moveNum" class="text-amber-100 font-bold text-base">0</span> 手</div>
+        <div class="text-xs text-amber-200/40 mt-1 tracking-wider">棋盘 <span id="sizeLabel" class="text-amber-100">19×19</span></div>
+      </div>
+    </header>
+
+    <div class="ornament-line mb-6 md:mb-8"></div>
+
+    <!-- 主体布局 -->
+    <div class="grid grid-cols-1 lg:grid-cols-[260px_1fr_260px] gap-5">
+      <!-- 左侧：黑方信息 -->
+      <aside class="panel p-5 flex flex-col gap-4 order-2 lg:order-1">
+        <h3 class="text-xs tracking-[0.3em] text-amber-200/40">BLACK · 黑方</h3>
+        <div class="flex items-center gap-4">
+          <div id="blackIndicator" class="player-indicator black active"></div>
+          <div>
+            <div class="text-2xl display-font text-amber-100">玄</div>
+            <div class="text-xs text-amber-200/50 mt-1">执黑先行</div>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2 mt-1">
+          <div class="stat-box">
+            <div class="text-[10px] text-amber-200/40 tracking-wider">提子</div>
+            <div class="text-xl font-bold text-amber-100 mt-1" id="blackCaptured">0</div>
+          </div>
+          <div class="stat-box">
+            <div class="text-[10px] text-amber-200/40 tracking-wider">手数</div>
+            <div class="text-xl font-bold text-amber-100 mt-1" id="blackMoves">0</div>
+          </div>
+        </div>
+        <div class="mt-2 pt-3 border-t border-amber-200/10">
+          <div class="text-[10px] text-amber-200/40 tracking-wider mb-2">说明</div>
+          <p class="text-xs text-amber-200/50 leading-relaxed">黑先白后，轮流落子。气尽提子，禁着自杀，劫争不可即提。</p>
+        </div>
+      </aside>
+
+      <!-- 中央：棋盘 -->
+      <div class="flex flex-col gap-4 items-center order-1 lg:order-2">
+        <div class="board-wrap">
+          <canvas id="board" width="720" height="720"></canvas>
+        </div>
+        <div class="status-bar w-full max-w-[720px]">
+          <span class="text-sm text-amber-200/50">当前 · </span>
+          <span id="statusText" class="status-text text-base font-bold text-amber-100">黑方落子</span>
+          <span class="text-sm text-amber-200/30 mx-3">|</span>
+          <span class="text-xs text-amber-200/50">点击棋盘交叉点落子</span>
+        </div>
+      </div>
+
+      <!-- 右侧：白方+控制 -->
+      <aside class="flex flex-col gap-4 order-3">
+        <div class="panel p-5">
+          <h3 class="text-xs tracking-[0.3em] text-amber-200/40 mb-4">WHITE · 白方</h3>
+          <div class="flex items-center gap-4">
+            <div id="whiteIndicator" class="player-indicator white"></div>
+            <div>
+              <div class="text-2xl display-font text-amber-100">素</div>
+              <div class="text-xs text-amber-200/50 mt-1">执白后行</div>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2 mt-4">
+            <div class="stat-box">
+              <div class="text-[10px] text-amber-200/40 tracking-wider">提子</div>
+              <div class="text-xl font-bold text-amber-100 mt-1" id="whiteCaptured">0</div>
+            </div>
+            <div class="stat-box">
+              <div class="text-[10px] text-amber-200/40 tracking-wider">手数</div>
+              <div class="text-xl font-bold text-amber-100 mt-1" id="whiteMoves">0</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel p-5">
+          <h3 class="text-xs tracking-[0.3em] text-amber-200/40 mb-4">CONTROL · 对局</h3>
+          <div class="flex flex-col gap-2">
+            <button class="btn btn-primary" id="newGameBtn">新对局</button>
+            <button class="btn" id="undoBtn">悔棋一手</button>
+            <button class="btn" id="passBtn">虚着</button>
+          </div>
+        </div>
+
+        <div class="panel p-5">
+          <h3 class="text-xs tracking-[0.3em] text-amber-200/40 mb-4">SIZE · 棋盘</h3>
+          <div class="grid grid-cols-3 gap-2">
+            <button class="btn size-btn" data-size="9">9×9</button>
+            <button class="btn size-btn" data-size="13">13×13</button>
+            <button class="btn size-btn active" data-size="19">19×19</button>
+          </div>
+        </div>
+
+        <div class="panel p-4">
+          <div class="text-[10px] text-amber-200/40 tracking-wider mb-2">SHORTCUT · 快捷键</div>
+          <div class="text-xs text-amber-200/60 space-y-1.5">
+            <div><kbd>U</kbd>悔棋</div>
+            <div><kbd>N</kbd>新对局</div>
+            <div><kbd>P</kbd>虚着</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- 棋谱 -->
+    <section class="panel p-5 mt-6">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-xs tracking-[0.3em] text-amber-200/40">RECORD · 棋谱</h3>
+        <span class="text-xs text-amber-200/40" id="recordCount">0 手</span>
+      </div>
+      <div id="record" class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto text-sm">
+        <span class="text-amber-200/30 text-xs">尚无落子，请黑方先行...</span>
+      </div>
+    </section>
+
+    <footer class="mt-8 text-center text-xs text-amber-200/30 tracking-wider">
+      古之黑白 · 今之墨弈
+    </footer>
+  </main>
+
+<script>
+// ============= 围棋核心 =============
+const canvas = document.getElementById('board');
+const ctx = canvas.getContext('2d');
+
+let SIZE = 19;
+let cellSize = 0;
+let margin = 0;
+let board = [];
+let currentPlayer = 1; // 1=黑 2=白
+let history = [];
+let lastMove = null;
+let koPoint = null;
+let blackCaptured = 0;
+let whiteCaptured = 0;
+let blackMoves = 0;
+let whiteMoves = 0;
+let moveRecord = [];
+let hoverPos = null;
+let animatingMove = null;
+
+// ============= 工具函数 =============
+function getStars(size) {
+  if (size === 19) {
+    const pts = [3, 9, 15];
+    return pts.flatMap(x => pts.map(y => [x, y]));
+  } else if (size === 13) {
+    return [[3,3],[3,9],[9,3],[9,9],[6,6]];
+  } else if (size === 9) {
+    return [[2,2],[2,6],[6,2],[6,6],[4,4]];
+  }
+  return [];
+}
+
+function getNeighbors(x, y) {
+  const r = [];
+  if (x > 0) r.push([x-1, y]);
+  if (x < SIZE-1) r.push([x+1, y]);
+  if (y > 0) r.push([x, y-1]);
+  if (y < SIZE-1) r.push([x, y+1]);
+  return r;
+}
+
+// 获取棋串及气数
+function getGroup(x, y, b) {
+  const color = b[y][x];
+  if (color === 0) return null;
+  const group = [];
+  const liberties = new Set();
+  const visited = new Set();
+  const queue = [[x, y]];
+  while (queue.length > 0) {
+    const [cx, cy] = queue.shift();
+    const key = `${cx},${cy}`;
+    if (visited.has(key)) continue;
+    visited.add(key);
+    group.push([cx, cy]);
+    for (const [nx, ny] of getNeighbors(cx, cy)) {
+      if (b[ny][nx] === 0) {
+        liberties.add(`${nx},${ny}`);
+      } else if (b[ny][nx] === color && !visited.has(`${nx},${ny}`)) {
+        queue.push([nx, ny]);
+      }
+    }
+  }
+  return { group, liberties: liberties.size };
+}
+
+// ============= 初始化 =============
+function initBoard(size) {
+  SIZE = size;
+  document.getElementById('sizeLabel').textContent = `${size}×${size}`;
+  board = Array(SIZE).fill().map(() => Array(SIZE).fill(0));
+  currentPlayer = 1;
+  history = [];
+  lastMove = null;
+  koPoint = null;
+  blackCaptured = 0;
+  whiteCaptured = 0;
+  blackMoves = 0;
+  whiteMoves = 0;
+  moveRecord = [];
+  animatingMove = null;
+  
+  const boardPixelSize = canvas.width;
+  margin = boardPixelSize / (SIZE + 1.5);
+  cellSize = (boardPixelSize - margin * 2) / (SIZE - 1);
+  
+  updateUI();
+  draw();
+}
+
+// ============= 绘制 =============
+function draw() {
+  const w = canvas.width;
+  const h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+
+  // 木纹底色
+  const grad = ctx.createLinearGradient(0, 0, w, h);
+  grad.addColorStop(0, '#dcb277');
+  grad.addColorStop(0.5, '#c8954d');
+  grad.addColorStop(1, '#a87b3a');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, w, h);
+
+  // 木纹纹理
+  ctx.save();
+  ctx.globalAlpha = 0.08;
+  for (let i = 0; i < 40; i++) {
+    ctx.strokeStyle = i % 2 ? '#3a2010' : '#6a4020';
+    ctx.lineWidth = Math.random() * 1.5 + 0.3;
+    ctx.beginPath();
+    const y = Math.random() * h;
+    ctx.moveTo(0, y);
+    ctx.bezierCurveTo(
+      w/3, y + (Math.random()-0.5)*30,
+      2*w/3, y + (Math.random()-0.5)*30,
+      w, y + (Math.random()-0.5)*20
+    );
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // 棋盘格线
+  ctx.strokeStyle = 'rgba(30, 18, 8, 0.85)';
+  ctx.lineWidth = 1;
+  ctx.lineCap = 'round';
+  for (let i = 0; i < SIZE; i++) {
+    const pos = margin + i * cellSize;
+    ctx.beginPath();
+    ctx.moveTo(margin, pos);
+    ctx.lineTo(margin + (SIZE-1) * cellSize, pos);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(pos, margin);
+    ctx.lineTo(pos, margin + (SIZE-1) * cellSize);
+    ctx.stroke();
+  }
+  // 边框加粗
+  ctx.strokeStyle = 'rgba(30, 18, 8, 0.95)';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(margin, margin, (SIZE-1) * cellSize, (SIZE-1) * cellSize);
+
+  // 星位
+  ctx.fillStyle = 'rgba(30, 18, 8, 0.9)';
+  getStars(SIZE).forEach(([x, y]) => {
+    ctx.beginPath();
+    ctx.arc(margin + x * cellSize, margin + y * cellSize, Math.max(2.5, cellSize * 0.09), 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  // 坐标标签
+  ctx.fillStyle = 'rgba(60, 35, 15, 0.55)';
+  ctx.font = `${Math.max(9, cellSize * 0.32)}px "Noto Sans SC", sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const letters = 'ABCDEFGHJKLMNOPQRST';
+  for (let i = 0; i < SIZE; i++) {
+    const pos = margin + i * cellSize;
+    ctx.fillText(letters[i], pos, margin / 2);
+    ctx.fillText(letters[i], pos, h - margin / 2);
+    const num = SIZE - i;
+    ctx.fillText(num, margin / 2, pos);
+    ctx.fillText(num, w - margin / 2, pos);
+  }
+
+  // 劫争禁着点
+  if (koPoint) {
+    const kx = margin + koPoint.x * cellSize;
+    const ky = margin + koPoint.y * cellSize;
+    ctx.strokeStyle = 'rgba(201, 56, 56, 0.85)';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.arc(kx, ky, cellSize * 0.32, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(kx - cellSize * 0.18, ky - cellSize * 0.18);
+    ctx.lineTo(kx + cellSize * 0.18, ky + cellSize * 0.18);
+    ctx.stroke();
+  }
+
+  // 棋子
+  for (let y = 0; y < SIZE; y++) {
+    for (let x = 0; x < SIZE; x++) {
+      if (board[y][x] !== 0) {
+        const isAnim = animatingMove && animatingMove.x === x && animatingMove.y === y;
+        drawStone(x, y, board[y][x], isAnim);
+      }
+    }
+  }
+
+  // 最后一手标记
+  if (lastMove && !(animatingMove && animatingMove.x === lastMove.x && animatingMove.y === lastMove.y)) {
+    const lx = margin + lastMove.x * cellSize;
+    const ly = margin + lastMove.y * cellSize;
+    ctx.strokeStyle = lastMove.color === 1 ? '#f5ede0' : '#c93838';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.arc(lx, ly, cellSize * 0.18, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // 鼠标悬停预览
+  if (hoverPos && board[hoverPos.y][hoverPos.x] === 0) {
+    const isKo = koPoint && koPoint.x === hoverPos.x && koPoint.y === hoverPos.y;
+    if (!isKo) {
+      ctx.save();
+      ctx.globalAlpha = 0.45;
+      drawStone(hoverPos.x, hoverPos.y, currentPlayer, false);
+      ctx.restore();
+    }
+  }
+}
+
+function drawStone(x, y, color, isAnim) {
+  const cx = margin + x * cellSize;
+  const cy = margin + y * cellSize;
+  let r = cellSize * 0.46;
+
+  // 落子动画：弹性缩放
+  if (isAnim) {
+    const elapsed = Date.now() - animatingMove.startTime;
+    const duration = 320;
+    if (elapsed >= duration) {
+      animatingMove = null;
+    } else {
+      const t = elapsed / duration;
+      let scale;
+      if (t < 0.65) {
+        scale = (t / 0.65) * 1.18;
+      } else {
+        scale = 1.18 - ((t - 0.65) / 0.35) * 0.18;
+      }
+      r *= scale;
+    }
+  }
+
+  r = Math.max(2, r);
+
+  // 阴影
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.5)';
+  ctx.shadowBlur = r * 0.4;
+  ctx.shadowOffsetX = r * 0.08;
+  ctx.shadowOffsetY = r * 0.15;
+
+  if (color === 1) {
+    // 黑子
+    const g = ctx.createRadialGradient(cx - r*0.35, cy - r*0.35, r*0.1, cx, cy, r);
+    g.addColorStop(0, '#5a4530');
+    g.addColorStop(0.35, '#2a1f15');
+    g.addColorStop(0.7, '#0d0805');
+    g.addColorStop(1, '#000000');
+    ctx.fillStyle = g;
+  } else {
+    // 白子
+    const g = ctx.createRadialGradient(cx - r*0.35, cy - r*0.35, r*0.1, cx, cy, r);
+    g.addColorStop(0, '#ffffff');
+    g.addColorStop(0.55, '#f5ede0');
+    g.addColorStop(0.85, '#d8c8a8');
+    g.addColorStop(1, '#a89878');
+    ctx.fillStyle = g;
+  }
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // 高光
+  ctx.save();
+  ctx.globalAlpha = 0.35;
+  const hg = ctx.createRadialGradient(cx - r*0.35, cy - r*0.4, 0, cx - r*0.35, cy - r*0.4, r*0.4);
+  hg.addColorStop(0, color === 1 ? '#a08868' : '#ffffff');
+  hg.addColorStop(1, color === 1 ? 'rgba(160,136,104,0)' : 'rgba(255,255,255,0)');
+  ctx.fillStyle = hg;
+  ctx.beginPath();
+  ctx.arc(cx - r*0.3, cy - r*0.3, r*0.35, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // 边缘暗影
+  ctx.save();
+  ctx.globalAlpha = 0.2;
+  ctx.strokeStyle = color === 1 ? '#000' : '#7a6850';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 0.96, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function animateFrame() {
+  if (!animatingMove) return;
+  draw();
+  if (animatingMove) {
+    requestAnimationFrame(animateFrame);
+  }
+}
+
+// ============= 落子逻辑 =============
+function placeStone(x, y) {
+  if (x < 0 || x >= SIZE || y < 0 || y >= SIZE) return false;
+  if (board[y][x] !== 0) {
+    showToast('此处已有棋子', 'error');
+    return false;
+  }
+  if (koPoint && koPoint.x === x && koPoint.y === y) {
+    showToast('劫争禁着 · 不可即提', 'error');
+    return false;
+  }
+
+  // 临时落子
+  const newBoard = board.map(row => [...row]);
+  newBoard[y][x] = currentPlayer;
+
+  // 检查对方棋串是否被提
+  const opponent = currentPlayer === 1 ? 2 : 1;
+  const captured = [];
+  for (const [nx, ny] of getNeighbors(x, y)) {
+    if (newBoard[ny][nx] === opponent) {
+      const result = getGroup(nx, ny, newBoard);
+      if (result.liberties === 0) {
+        for (const [gx, gy] of result.group) {
+          if (!captured.some(([cx, cy]) => cx === gx && cy === gy)) {
+            captured.push([gx, gy]);
+          }
+        }
+      }
+    }
+  }
+  // 移除被提子
+  for (const [cx, cy] of captured) {
+    newBoard[cy][cx] = 0;
+  }
+
+  // 检查自杀
+  const myGroup = getGroup(x, y, newBoard);
+  if (myGroup.liberties === 0) {
+    showToast('禁着点 · 不可自杀', 'error');
+    return false;
+  }
+
+  // 保存历史
+  history.push({
+    board: board.map(row => [...row]),
+    currentPlayer,
+    lastMove: lastMove ? {...lastMove} : null,
+    koPoint: koPoint ? {...koPoint} : null,
+    blackCaptured,
+    whiteCaptured,
+    blackMoves,
+    whiteMoves,
+    moveRecord: [...moveRecord]
+  });
+
+  // 应用新状态
+  board = newBoard;
+  if (currentPlayer === 1) blackCaptured += captured.length;
+  else whiteCaptured += captured.length;
+
+  // 劫争点判断
+  if (captured.length === 1 && myGroup.group.length === 1 && myGroup.liberties === 1) {
+    koPoint = { x: captured[0][0], y: captured[0][1] };
+  } else {
+    koPoint = null;
+  }
+
+  lastMove = { x, y, color: currentPlayer };
+  if (currentPlayer === 1) blackMoves++; else whiteMoves++;
+
+  // 棋谱记录
+  const letters = 'ABCDEFGHJKLMNOPQRST';
+  moveRecord.push({
+    player: currentPlayer,
+    notation: `${currentPlayer === 1 ? 'B' : 'W'}${letters[x]}${SIZE - y}`
+  });
+
+  if (captured.length > 0) {
+    showToast(`提 ${captured.length} 子`, 'success');
+  }
+
+  // 启动动画
+  animatingMove = { x, y, color: lastMove.color, startTime: Date.now() };
+  requestAnimationFrame(animateFrame);
+
+  currentPlayer = opponent;
+  updateUI();
+  draw();
+  return true;
+}
+
+function undo() {
+  if (history.length === 0) {
+    showToast('已无棋可悔', 'error');
+    return;
+  }
+  const s = history.pop();
+  board = s.board;
+  currentPlayer = s.currentPlayer;
+  lastMove = s.lastMove;
+  koPoint = s.koPoint;
+  blackCaptured = s.blackCaptured;
+  whiteCaptured = s.whiteCaptured;
+  blackMoves = s.blackMoves;
+  whiteMoves = s.whiteMoves;
+  moveRecord = s.moveRecord;
+  animatingMove = null;
+  updateUI();
+  draw();
+}
+
+function pass() {
+  history.push({
+    board: board.map(row => [...row]),
+    currentPlayer,
+    lastMove: lastMove ? {...lastMove} : null,
+    koPoint: koPoint ? {...koPoint} : null,
+    blackCaptured,
+    whiteCaptured,
+    blackMoves,
+    whiteMoves,
+    moveRecord: [...moveRecord]
+  });
+  moveRecord.push({
+    player: currentPlayer,
+    notation: `${currentPlayer === 1 ? 'B' : 'W'}Pass`
+  });
+  currentPlayer = currentPlayer === 1 ? 2 : 1;
+  lastMove = null;
+  koPoint = null;
+  showToast(currentPlayer === 1 ? '白方虚着 · 现黑方落子' : '黑方虚着 · 现白方落子');
+  updateUI();
+  draw();
+}
+
+// ============= UI 更新 =============
+function updateUI() {
+  document.getElementById('moveNum').textContent = moveRecord.length;
+  document.getElementById('blackCaptured').textContent = blackCaptured;
+  document.getElementById('whiteCaptured').textContent = whiteCaptured;
+  document.getElementById('blackMoves').textContent = blackMoves;
+  document.getElementById('whiteMoves').textContent = whiteMoves;
+  document.getElementById('blackIndicator').classList.toggle('active', currentPlayer === 1);
+  document.getElementById('whiteIndicator').classList.toggle('active', currentPlayer === 2);
+  document.getElementById('statusText').textContent = currentPlayer === 1 ? '黑方落子' : '白方落子';
+
+  const recordEl = document.getElementById('record');
+  document.getElementById('recordCount').textContent = `${moveRecord.length} 手`;
+  if (moveRecord.length === 0) {
+    recordEl.innerHTML = '<span class="text-amber-200/30 text-xs">尚无落子，请黑方先行...</span>';
+  } else {
+    recordEl.innerHTML = moveRecord.map((m, i) =>
+      `<span class="move-tag ${m.player === 1 ? 'b' : 'w'}">${i+1}. ${m.notation}</span>`
+    ).join('');
+    recordEl.scrollTop = recordEl.scrollHeight;
+  }
+}
+
+// ============= Toast =============
+let toastTimer = null;
+function showToast(msg, type = 'info') {
+  let toast = document.querySelector('.toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.className = 'toast';
+    document.body.appendChild(toast);
+  }
+  toast.className = `toast ${type}`;
+  toast.textContent = msg;
+  if (toastTimer) clearTimeout(toastTimer);
+  requestAnimationFrame(() => toast.classList.add('show'));
+  toastTimer = setTimeout(() => {
+    toast.classList.remove('show');
+  }, 1800);
+}
+
+// ============= 事件绑定 =============
+function getCanvasCoord(e) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const mx = (e.clientX - rect.left) * scaleX;
+  const my = (e.clientY - rect.top) * scaleY;
+  return {
+    x: Math.round((mx - margin) / cellSize),
+    y: Math.round((my - margin) / cellSize)
+  };
+}
+
+canvas.addEventListener('mousemove', (e) => {
+  const { x, y } = getCanvasCoord(e);
+  if (x >= 0 && x < SIZE && y >= 0 && y < SIZE) {
+    if (!hoverPos || hoverPos.x !== x || hoverPos.y !== y) {
+      hoverPos = { x, y };
+      draw();
+    }
+  } else if (hoverPos) {
+    hoverPos = null;
+    draw();
+  }
+});
+
+canvas.addEventListener('mouseleave', () => {
+  if (hoverPos) {
+    hoverPos = null;
+    draw();
+  }
+});
+
+canvas.addEventListener('click', (e) => {
+  const { x, y } = getCanvasCoord(e);
+  if (x >= 0 && x < SIZE && y >= 0 && y < SIZE) {
+    placeStone(x, y);
+  }
+});
+
+// 触摸支持
+canvas.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  const touch = e.touches[0];
+  const { x, y } = getCanvasCoord(touch);
+  if (x >= 0 && x < SIZE && y >= 0 && y < SIZE) {
+    placeStone(x, y);
+  }
+}, { passive: false });
+
+document.getElementById('newGameBtn').addEventListener('click', () => {
+  initBoard(SIZE);
+  showToast('新对局开始');
+});
+document.getElementById('undoBtn').addEventListener('click', undo);
+document.getElementById('passBtn').addEventListener('click', pass);
+
+document.querySelectorAll('.size-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const size = parseInt(btn.dataset.size);
+    document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    initBoard(size);
+  });
+});
+
+// 键盘快捷键
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  const k = e.key.toLowerCase();
+  if (k === 'u') undo();
+  else if (k === 'n') { initBoard(SIZE); showToast('新对局开始'); }
+  else if (k === 'p') pass();
+});
+
+// 启动
+initBoard(19);
+</script>
+</body>
+</html>
