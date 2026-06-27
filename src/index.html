@@ -481,106 +481,10 @@
 
             <div class="ornament-line mb-4 md:mb-5"></div>
 
-            <!-- 工具条：对局控制 + 棋盘尺寸 -->
-            <div class="flex items-center justify-center gap-3 mb-5 md:mb-6">
-                <div class="panel p-2.5 flex gap-2">
-                    <button
-                        class="btn btn-primary !py-2 !px-4 text-sm"
-                        id="newGameBtn"
-                    >
-                        新对局
-                    </button>
-                    <button class="btn !py-2 !px-4 text-sm" id="undoBtn">
-                        悔棋
-                    </button>
-                    <button class="btn !py-2 !px-4 text-sm" id="passBtn">
-                        虚着
-                    </button>
-                </div>
-                <div class="panel p-2.5 flex gap-1.5">
-                    <button
-                        class="btn size-btn !px-2.5 !py-1.5 text-xs"
-                        data-size="9"
-                    >
-                        9
-                    </button>
-                    <button
-                        class="btn size-btn !px-2.5 !py-1.5 text-xs"
-                        data-size="13"
-                    >
-                        13
-                    </button>
-                    <button
-                        class="btn size-btn !px-2.5 !py-1.5 text-xs active"
-                        data-size="19"
-                    >
-                        19
-                    </button>
-                </div>
-                <div
-                    class="hidden md:flex items-center gap-2 text-xs text-amber-200/60"
-                >
-                    <span><kbd>U</kbd>悔棋</span>
-                    <span><kbd>N</kbd>新局</span>
-                    <span><kbd>P</kbd>虚着</span>
-                </div>
-            </div>
-
-            <!-- 主体布局 -->
-            <div class="grid grid-cols-1 lg:grid-cols-[260px_1fr_260px] gap-5">
-                <!-- 左侧：黑方信息 -->
-                <aside class="panel p-5 flex flex-col gap-4 order-2 lg:order-1">
-                    <h3 class="text-xs tracking-[0.3em] text-amber-200/40">
-                        BLACK · 黑方
-                    </h3>
-                    <div class="flex items-center gap-4">
-                        <div
-                            id="blackIndicator"
-                            class="player-indicator black active"
-                        ></div>
-                        <div>
-                            <div class="text-2xl display-font text-amber-100">
-                                玄
-                            </div>
-                            <div class="text-xs text-amber-200/50 mt-1">
-                                执黑先行
-                            </div>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2 mt-1">
-                        <div class="stat-box">
-                            <div
-                                class="text-[10px] text-amber-200/40 tracking-wider"
-                            >
-                                提子
-                            </div>
-                            <div
-                                class="text-xl font-bold text-amber-100 mt-1"
-                                id="blackCaptured"
-                            >
-                                0
-                            </div>
-                        </div>
-                        <div class="stat-box">
-                            <div
-                                class="text-[10px] text-amber-200/40 tracking-wider"
-                            >
-                                手数
-                            </div>
-                            <div
-                                class="text-xl font-bold text-amber-100 mt-1"
-                                id="blackMoves"
-                            >
-                                0
-                            </div>
-                        </div>
-                    </div>
-                </aside>
-
-                <!-- 中央：棋盘 -->
-                <div
-                    class="flex flex-col gap-4 items-center order-1 lg:order-2"
-                >
+            <!-- 两栏：棋盘 | 信息+控制+棋谱 -->
+            <div class="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-5">
+                <!-- 左栏：棋盘 -->
+                <div class="flex flex-col gap-4 items-center order-1">
                     <div class="board-wrap">
                         <canvas id="board" width="720" height="720"></canvas>
                     </div>
@@ -598,52 +502,90 @@
                     </div>
                 </div>
 
-                <!-- 右侧：白方 -->
-                <aside class="flex flex-col gap-4 order-3">
-                    <div class="panel p-5">
-                        <h3
-                            class="text-xs tracking-[0.3em] text-amber-200/40 mb-4"
-                        >
-                            WHITE · 白方
+                <!-- 右栏：信息 + 控制 + 棋谱 -->
+                <aside class="flex flex-col gap-3 order-2">
+                    <!-- 黑方 -->
+                    <div class="panel p-4">
+                        <h3 class="text-xs tracking-[0.3em] text-amber-200/40">
+                            BLACK · 黑方
                         </h3>
-                        <div class="flex items-center gap-4">
+                        <div class="flex items-center gap-3 mt-3">
                             <div
-                                id="whiteIndicator"
-                                class="player-indicator white"
+                                id="blackIndicator"
+                                class="player-indicator black active !w-10 !h-10"
                             ></div>
-                            <div>
+                            <div class="flex-1">
                                 <div
-                                    class="text-2xl display-font text-amber-100"
+                                    class="text-lg display-font text-amber-100"
                                 >
-                                    素
+                                    玄
                                 </div>
-                                <div class="text-xs text-amber-200/50 mt-1">
-                                    执白后行
+                                <div class="text-xs text-amber-200/50">
+                                    执黑先行
                                 </div>
                             </div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-2 mt-4">
-                            <div class="stat-box">
-                                <div
-                                    class="text-[10px] text-amber-200/40 tracking-wider"
-                                >
+                            <div class="text-right">
+                                <div class="text-[10px] text-amber-200/40">
                                     提子
                                 </div>
                                 <div
-                                    class="text-xl font-bold text-amber-100 mt-1"
+                                    class="text-lg font-bold text-amber-100"
+                                    id="blackCaptured"
+                                >
+                                    0
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-[10px] text-amber-200/40">
+                                    手数
+                                </div>
+                                <div
+                                    class="text-lg font-bold text-amber-100"
+                                    id="blackMoves"
+                                >
+                                    0
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 白方 -->
+                    <div class="panel p-4">
+                        <h3 class="text-xs tracking-[0.3em] text-amber-200/40">
+                            WHITE · 白方
+                        </h3>
+                        <div class="flex items-center gap-3 mt-3">
+                            <div
+                                id="whiteIndicator"
+                                class="player-indicator white !w-10 !h-10"
+                            ></div>
+                            <div class="flex-1">
+                                <div
+                                    class="text-lg display-font text-amber-100"
+                                >
+                                    素
+                                </div>
+                                <div class="text-xs text-amber-200/50">
+                                    执白后行
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-[10px] text-amber-200/40">
+                                    提子
+                                </div>
+                                <div
+                                    class="text-lg font-bold text-amber-100"
                                     id="whiteCaptured"
                                 >
                                     0
                                 </div>
                             </div>
-                            <div class="stat-box">
-                                <div
-                                    class="text-[10px] text-amber-200/40 tracking-wider"
-                                >
+                            <div class="text-right">
+                                <div class="text-[10px] text-amber-200/40">
                                     手数
                                 </div>
                                 <div
-                                    class="text-xl font-bold text-amber-100 mt-1"
+                                    class="text-lg font-bold text-amber-100"
                                     id="whiteMoves"
                                 >
                                     0
@@ -651,28 +593,87 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- 控制 -->
+                    <div class="panel p-3 flex gap-2">
+                        <button
+                            class="btn btn-primary !py-2 !px-3 text-sm flex-1"
+                            id="newGameBtn"
+                        >
+                            新对局
+                        </button>
+                        <button
+                            class="btn !py-2 !px-3 text-sm flex-1"
+                            id="undoBtn"
+                        >
+                            悔棋
+                        </button>
+                        <button
+                            class="btn !py-2 !px-3 text-sm flex-1"
+                            id="passBtn"
+                        >
+                            虚着
+                        </button>
+                    </div>
+
+                    <!-- 棋盘尺寸 + 快捷键 -->
+                    <div class="flex gap-2 items-center">
+                        <div
+                            class="panel p-2.5 flex gap-1.5 flex-1 justify-center"
+                        >
+                            <button
+                                class="btn size-btn !px-3 !py-1.5 text-xs"
+                                data-size="9"
+                            >
+                                9
+                            </button>
+                            <button
+                                class="btn size-btn !px-3 !py-1.5 text-xs"
+                                data-size="13"
+                            >
+                                13
+                            </button>
+                            <button
+                                class="btn size-btn !px-3 !py-1.5 text-xs active"
+                                data-size="19"
+                            >
+                                19
+                            </button>
+                        </div>
+                        <div
+                            class="hidden md:flex items-center gap-1.5 text-xs text-amber-200/60"
+                        >
+                            <span><kbd>U</kbd>悔棋</span>
+                            <span><kbd>N</kbd>新局</span>
+                            <span><kbd>P</kbd>虚着</span>
+                        </div>
+                    </div>
+
+                    <!-- 棋谱 -->
+                    <div class="panel p-4 flex-1 overflow-hidden">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3
+                                class="text-xs tracking-[0.3em] text-amber-200/40"
+                            >
+                                RECORD · 棋谱
+                            </h3>
+                            <span
+                                class="text-xs text-amber-200/40"
+                                id="recordCount"
+                                >0 手</span
+                            >
+                        </div>
+                        <div
+                            id="record"
+                            class="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto text-sm"
+                        >
+                            <span class="text-amber-200/30 text-xs"
+                                >尚无落子，请黑方先行...</span
+                            >
+                        </div>
+                    </div>
                 </aside>
             </div>
-
-            <!-- 棋谱 -->
-            <section class="panel p-5 mt-6">
-                <div class="flex items-center justify-between mb-3">
-                    <h3 class="text-xs tracking-[0.3em] text-amber-200/40">
-                        RECORD · 棋谱
-                    </h3>
-                    <span class="text-xs text-amber-200/40" id="recordCount"
-                        >0 手</span
-                    >
-                </div>
-                <div
-                    id="record"
-                    class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto text-sm"
-                >
-                    <span class="text-amber-200/30 text-xs"
-                        >尚无落子，请黑方先行...</span
-                    >
-                </div>
-            </section>
 
             <footer
                 class="mt-8 text-center text-xs text-amber-200/30 tracking-wider"
