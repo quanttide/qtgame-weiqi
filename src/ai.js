@@ -2,6 +2,36 @@
 // 不搜索、不学习、零依赖。用规则评价每步棋，选得分最高的落子。
 
 // eslint-disable-next-line no-unused-vars
+function checkAIMove() {
+  if (!aiMode || currentPlayer !== AI_PLAYER) return;
+
+  // 用计分器判断 AI 是否还有活棋 → 避免被全包围还在往里下
+  if (moveRecord.length > 10 && typeof calculateScore === "function") {
+    let aiOnBoard = 0;
+    for (let y = 0; y < SIZE; y++)
+      for (let x = 0; x < SIZE; x++) if (board[y][x] === AI_PLAYER) aiOnBoard++;
+    if (aiOnBoard >= 10) {
+      const s = calculateScore();
+      const aiAlive = AI_PLAYER === 1 ? s.blackStones : s.whiteStones;
+      const aiTotal = AI_PLAYER === 1 ? s.blackTotal : s.whiteTotal;
+      const oppTotal = AI_PLAYER === 1 ? s.whiteTotal : s.blackTotal;
+      if (aiAlive < 5 || (aiTotal + 20 < oppTotal && aiAlive < 20)) {
+        pass();
+        return;
+      }
+    }
+  }
+
+  const st = document.getElementById("statusText");
+  if (st) st.textContent = "AI 思考中...";
+  setTimeout(() => {
+    if (currentPlayer !== AI_PLAYER) return;
+    const move = aiSuggestMove();
+    if (move) placeStone(move.x, move.y);
+    else pass();
+  }, 200);
+}
+
 function aiSuggestMove() {
   let bestScore = -Infinity;
   let candidates = [];
@@ -19,7 +49,7 @@ function aiSuggestMove() {
     }
   }
 
-  if (candidates.length === 0) return null; // 无棋可下
+  if (candidates.length === 0) return null;
 
   // 没有好棋就 Pass（终局用）
   if (bestScore < 5 && moveRecord.length > 10) return null;
@@ -32,12 +62,10 @@ function aiIsLegal(x, y) {
   if (x < 0 || x >= SIZE || y < 0 || y >= SIZE) return false;
   if (board[y][x] !== 0) return false;
 
-  // 模拟落子后检查
   const nb = board.map((row) => [...row]);
   nb[y][x] = currentPlayer;
   const opp = currentPlayer === 1 ? 2 : 1;
 
-  // 能提子 → 合法
   for (const [nx, ny] of getNeighbors(x, y)) {
     if (nb[ny][nx] === opp) {
       const g = getGroup(nx, ny, nb);
@@ -45,7 +73,6 @@ function aiIsLegal(x, y) {
     }
   }
 
-  // 不能自杀
   const mg = getGroup(x, y, nb);
   return mg && mg.liberties > 0;
 }
@@ -58,7 +85,7 @@ function aiEvaluate(x, y) {
   const totalMoves = moveRecord.length;
   let score = 0;
 
-  // ---- 提子（最高优先） ----
+  // 提子
   for (const [nx, ny] of getNeighbors(x, y)) {
     if (nb[ny][nx] === opp) {
       const g = getGroup(nx, ny, nb);
@@ -66,7 +93,7 @@ function aiEvaluate(x, y) {
     }
   }
 
-  // ---- 救活己方濒死棋串（1气） ----
+  // 救活己方濒死棋串
   for (const [nx, ny] of getNeighbors(x, y)) {
     if (board[ny][nx] === p) {
       const g = getGroup(nx, ny, board);
@@ -74,7 +101,7 @@ function aiEvaluate(x, y) {
     }
   }
 
-  // ---- 打吃对方（使其剩1气） ----
+  // 打吃对方
   for (const [nx, ny] of getNeighbors(x, y)) {
     if (nb[ny][nx] === opp) {
       const g = getGroup(nx, ny, nb);
@@ -82,21 +109,17 @@ function aiEvaluate(x, y) {
     }
   }
 
-  // ---- 位置质量：距离边界的层数 ----
+  // 位置质量
   const d = Math.min(x, y, SIZE - 1 - x, SIZE - 1 - y);
   if (totalMoves < 50) {
-    // d=0 一路，d=1 二路，d=2 三路，d=3 四路 ...
-    if (d >= 3)
-      score += 12; // 四路及以上：好位置
-    else if (d === 2)
-      score += 8; // 三路：不错
-    else if (d === 1) score += 2; // 二路：可接受
-    // d === 0 不给加分也不减分（靠其他评分决定）
+    if (d >= 3) score += 12;
+    else if (d === 2) score += 8;
+    else if (d === 1) score += 2;
   }
 
-  // ---- 靠近己方棋子（扩张/连接） ----
-  let ownAdj = 0;
-  let ownDist2 = 0;
+  // 靠近己方棋子的扩张
+  let ownAdj = 0,
+    ownDist2 = 0;
   for (let dy = -2; dy <= 2; dy++) {
     for (let dx = -2; dx <= 2; dx++) {
       if (dx === 0 && dy === 0) continue;
@@ -104,17 +127,14 @@ function aiEvaluate(x, y) {
         ny = y + dy;
       if (nx < 0 || nx >= SIZE || ny < 0 || ny >= SIZE) continue;
       if (board[ny][nx] !== p) continue;
-      const dist = Math.abs(dx) + Math.abs(dy);
-      if (dist === 1) ownAdj++;
+      if (Math.abs(dx) + Math.abs(dy) === 1) ownAdj++;
       else ownDist2++;
     }
   }
-  // 紧邻己方棋子：+6/子，但最多 +18（鼓励但不重复）
   score += Math.min(ownAdj * 6, 18);
-  // 间隔一格的己方棋子：+3/子，鼓励扩张而非过度聚集
   score += Math.min(ownDist2 * 3, 12);
 
-  // ---- 远离对方强棋 ----
+  // 远离对方强棋
   for (let dy = -1; dy <= 1; dy++) {
     for (let dx = -1; dx <= 1; dx++) {
       if (dx === 0 && dy === 0) continue;
@@ -123,16 +143,16 @@ function aiEvaluate(x, y) {
       if (nx < 0 || nx >= SIZE || ny < 0 || ny >= SIZE) continue;
       if (board[ny][nx] === opp) {
         const g = getGroup(nx, ny, board);
-        if (g && g.liberties >= 4) score -= 20; // 对方强棋附近
+        if (g && g.liberties >= 4) score -= 20;
       }
     }
   }
 
-  // ---- 中盘后向中央发展 ----
+  // 中盘后向中央
   if (totalMoves > 50) {
     const center = (SIZE - 1) / 2;
-    const distFromCenter = Math.abs(x - center) + Math.abs(y - center);
-    score += Math.max(0, (SIZE - distFromCenter) * 0.5);
+    score +=
+      Math.max(0, SIZE - Math.abs(x - center) - Math.abs(y - center)) * 0.5;
   }
 
   return score;

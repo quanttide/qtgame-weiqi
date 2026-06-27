@@ -80,38 +80,6 @@ function newGame() {
   if (aiMode && currentPlayer === AI_PLAYER) checkAIMove();
 }
 
-function checkAIMove() {
-  if (!aiMode || currentPlayer !== AI_PLAYER) return;
-
-  // 用计分器判断 AI 是否还有活棋 → 避免被全包围还在往里下
-  if (moveRecord.length > 10 && typeof calculateScore === "function") {
-    // 先数 AI 在棋盘上有多少子（不含提子），少于 10 颗不判断（开局/刚提完）
-    let aiOnBoard = 0;
-    for (let y = 0; y < SIZE; y++)
-      for (let x = 0; x < SIZE; x++) if (board[y][x] === AI_PLAYER) aiOnBoard++;
-    if (aiOnBoard >= 10) {
-      const s = calculateScore();
-      const aiAlive = AI_PLAYER === 1 ? s.blackStones : s.whiteStones;
-      const aiTotal = AI_PLAYER === 1 ? s.blackTotal : s.whiteTotal;
-      const oppTotal = AI_PLAYER === 1 ? s.whiteTotal : s.blackTotal;
-      // 条件 A：活棋太少（被全包围）或 条件 B：分差过大且无法逆转
-      if (aiAlive < 5 || (aiTotal + 20 < oppTotal && aiAlive < 20)) {
-        pass();
-        return;
-      }
-    }
-  }
-
-  const st = document.getElementById("statusText");
-  if (st) st.textContent = "AI 思考中...";
-  setTimeout(() => {
-    if (currentPlayer !== AI_PLAYER) return;
-    const move = aiSuggestMove();
-    if (move) placeStone(move.x, move.y);
-    else pass();
-  }, 200);
-}
-
 // ============= 计算结果 =============
 function showResult(score) {
   gameOver = true;

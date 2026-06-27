@@ -16,6 +16,7 @@ export default [
       globals: {
         ...GLOBALS,
         aiSuggestMove: "readonly",
+        checkAIMove: "readonly",
         calculateScore: "readonly",
         canvas: "writable",
         ctx: "writable",
@@ -37,9 +38,15 @@ export default [
         SIZE: "writable",
         currentPlayer: "writable",
         moveRecord: "writable",
+        AI_PLAYER: "writable",
+        aiMode: "writable",
+        aiSuggestMove: "readonly",
         getNeighbors: "readonly",
         getGroup: "readonly",
         getStars: "readonly",
+        pass: "readonly",
+        placeStone: "readonly",
+        calculateScore: "readonly",
       },
     },
     rules: {
