@@ -46,12 +46,14 @@ argument-hint: "[product|design|architecture]"
 对当前源码执行单个视角的分析：
 
 ```
-使用 product-blueprint product SKILL  → 输出产品视角文档
-使用 product-blueprint design SKILL  → 输出设计视角文档
-使用 product-blueprint architecture SKILL → 输出技术视角文档
+使用 product-blueprint product SKILL      → 输出 docs/dev/product.md
+使用 product-blueprint design SKILL       → 输出 docs/dev/design.md
+使用 product-blueprint architecture SKILL  → 输出 docs/dev/architecture.md
 ```
 
-如不指定参数则默认输出三个视角的完整蓝图。
+不指定参数时默认输出三个视角的完整蓝图，全部写入 `docs/dev/`。
+
+每次循环的分析产物是对应于当前代码快照的 dev 文档，反映的是**这一轮**的实现状态。
 
 ## 维护说明
 
