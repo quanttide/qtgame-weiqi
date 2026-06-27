@@ -747,6 +747,7 @@ canvas.addEventListener(
 );
 
 document.getElementById("newGameBtn").addEventListener("click", newGame);
+document.getElementById("passBtn").addEventListener("click", pass);
 document
   .getElementById("recordPrevBtn")
   .addEventListener("click", () => goToSnapshot(viewingIdx - 1));
@@ -758,6 +759,7 @@ document.addEventListener("keydown", (e) => {
   if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
   const k = e.key.toLowerCase();
   if (k === "n") newGame();
+  else if (k === "p") pass();
   else if (k === "arrowleft") goToSnapshot(viewingIdx - 1);
   else if (k === "arrowright") goToSnapshot(viewingIdx + 1);
 });

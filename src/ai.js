@@ -19,7 +19,10 @@ function aiSuggestMove() {
     }
   }
 
-  if (candidates.length === 0) return null; // 无棋可下 → Pass
+  if (candidates.length === 0) return null; // 无棋可下
+
+  // 没有好棋就 Pass（终局用）
+  if (bestScore < 5 && moveRecord.length > 10) return null;
 
   // 同分随机选一个，增加变化
   return candidates[Math.floor(Math.random() * candidates.length)];
