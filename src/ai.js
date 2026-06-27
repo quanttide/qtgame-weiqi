@@ -15,7 +15,9 @@ function checkAIMove() {
       const aiAlive = AI_PLAYER === 1 ? s.blackStones : s.whiteStones;
       const aiTotal = AI_PLAYER === 1 ? s.blackTotal : s.whiteTotal;
       const oppTotal = AI_PLAYER === 1 ? s.whiteTotal : s.blackTotal;
-      if (aiAlive < 5 || (aiTotal + 20 < oppTotal && aiAlive < 20)) {
+      // 只剩不到 3 颗活棋 → 被全包围 → 认输
+      // 或分差 ≥ 50 且活棋不足 → 追不回
+      if (aiAlive < 3 || (aiTotal + 50 < oppTotal && aiAlive < 15)) {
         pass();
         return;
       }
@@ -52,7 +54,7 @@ function aiSuggestMove() {
   if (candidates.length === 0) return null;
 
   // 没有好棋就 Pass（终局用）
-  if (bestScore < 5 && moveRecord.length > 10) return null;
+  if (bestScore < 3 && moveRecord.length > 20) return null;
 
   // 同分随机选一个，增加变化
   return candidates[Math.floor(Math.random() * candidates.length)];
