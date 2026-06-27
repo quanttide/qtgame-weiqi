@@ -16,6 +16,7 @@ export default [
       globals: {
         ...GLOBALS,
         aiSuggestMove: "readonly",
+        calculateScore: "readonly",
         canvas: "writable",
         ctx: "writable",
       },
@@ -39,6 +40,26 @@ export default [
         getNeighbors: "readonly",
         getGroup: "readonly",
         getStars: "readonly",
+      },
+    },
+    rules: {
+      "no-unused-vars": "warn",
+      "no-undef": "error",
+    },
+  },
+  {
+    files: ["src/score.js"],
+    languageOptions: {
+      ecmaVersion: "latest",
+      sourceType: "script",
+      globals: {
+        ...GLOBALS,
+        board: "writable",
+        SIZE: "writable",
+        blackCaptured: "readonly",
+        whiteCaptured: "readonly",
+        KOMI: "readonly",
+        getNeighbors: "readonly",
       },
     },
     rules: {

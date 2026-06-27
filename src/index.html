@@ -150,6 +150,20 @@
                         </div>
                     </div>
 
+                    <div
+                        id="liveScore"
+                        class="text-center text-xs text-amber-200/40 py-1"
+                    >
+                        黑
+                        <span id="blackScore" class="text-amber-100 font-bold"
+                            >0</span
+                        >
+                        · 白
+                        <span id="whiteScore" class="text-amber-100 font-bold"
+                            >0</span
+                        >
+                    </div>
+
                     <button class="btn !py-1 text-xs" id="passBtn">
                         ⏹ 结束（Pass）
                     </button>
@@ -223,6 +237,7 @@
         </div>
 
         <script src="main.js"></script>
+        <script src="score.js"></script>
         <script src="ai.js"></script>
     </body>
 </html>

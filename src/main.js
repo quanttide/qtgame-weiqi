@@ -92,53 +92,7 @@ function checkAIMove() {
   }, 200);
 }
 
-function calculateScore() {
-  const visited = Array.from({ length: SIZE }, () => Array(SIZE).fill(false));
-  let blackTerritory = 0,
-    whiteTerritory = 0;
-  let blackStones = 0,
-    whiteStones = 0;
-
-  for (let y = 0; y < SIZE; y++) {
-    for (let x = 0; x < SIZE; x++) {
-      if (board[y][x] === 1) blackStones++;
-      else if (board[y][x] === 2) whiteStones++;
-      else if (board[y][x] === 0 && !visited[y][x]) {
-        const region = [];
-        const borders = new Set();
-        const queue = [[x, y]];
-        visited[y][x] = true;
-        while (queue.length) {
-          const [cx, cy] = queue.shift();
-          region.push([cx, cy]);
-          for (const [nx, ny] of getNeighbors(cx, cy)) {
-            if (board[ny][nx] === 0 && !visited[ny][nx]) {
-              visited[ny][nx] = true;
-              queue.push([nx, ny]);
-            } else if (board[ny][nx] === 1) borders.add("b");
-            else if (board[ny][nx] === 2) borders.add("w");
-          }
-        }
-        if (borders.size === 1) {
-          if (borders.has("b")) blackTerritory += region.length;
-          else whiteTerritory += region.length;
-        }
-      }
-    }
-  }
-
-  const blackTotal = blackStones + blackTerritory + blackCaptured;
-  const whiteTotal = whiteStones + whiteTerritory + whiteCaptured + KOMI;
-  return {
-    blackTotal,
-    whiteTotal,
-    blackStones,
-    blackTerritory,
-    whiteStones,
-    whiteTerritory,
-  };
-}
-
+// ============= 计算结果 =============
 function showResult(score) {
   gameOver = true;
   const winner = score.blackTotal > score.whiteTotal ? "黑" : "白";
@@ -671,6 +625,17 @@ function updateUI() {
       )
       .join("");
     recordEl.scrollTop = recordEl.scrollHeight;
+  }
+
+  // 实时计分
+  if (typeof calculateScore === "function" && moveRecord.length > 0) {
+    const s = calculateScore();
+    document.getElementById("blackScore").textContent = Math.round(
+      s.blackTotal,
+    );
+    document.getElementById("whiteScore").textContent = Math.round(
+      s.whiteTotal,
+    );
   }
 }
 
