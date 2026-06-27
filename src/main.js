@@ -19,7 +19,7 @@ let hoverPos = null;
 let animatingMove = null;
 let snapshots = [];
 let viewingIdx = 0;
-let aiMode = false;
+let aiMode = true;
 let AI_PLAYER = 2; // AI 执白
 
 function getState() {
@@ -71,6 +71,12 @@ function updateNavUI() {
   if (nextBtn) nextBtn.disabled = viewingIdx >= snapshots.length - 1;
 }
 
+function newGame() {
+  initBoard(SIZE);
+  showToast(aiMode ? "新对局（AI 执白）" : "新对局");
+  if (aiMode && currentPlayer === AI_PLAYER) checkAIMove();
+}
+
 function checkAIMove() {
   if (!aiMode || currentPlayer !== AI_PLAYER) return;
   const st = document.getElementById("statusText");
@@ -81,15 +87,6 @@ function checkAIMove() {
     if (move) placeStone(move.x, move.y);
     else pass();
   }, 200);
-}
-
-function toggleAI() {
-  aiMode = !aiMode;
-  const btn = document.getElementById("aiBtn");
-  if (btn) btn.classList.toggle("active");
-  initBoard(SIZE);
-  showToast(aiMode ? "AI 对弈开启（你执黑）" : "双人对弈");
-  if (aiMode && currentPlayer === AI_PLAYER) checkAIMove();
 }
 
 // ============= 工具函数 =============
@@ -535,29 +532,6 @@ function placeStone(x, y) {
   return true;
 }
 
-function undo() {
-  if (history.length === 0) {
-    showToast("已无棋可悔", "error");
-    return;
-  }
-  const s = history.pop();
-  board = s.board;
-  currentPlayer = s.currentPlayer;
-  lastMove = s.lastMove;
-  koPoint = s.koPoint;
-  blackCaptured = s.blackCaptured;
-  whiteCaptured = s.whiteCaptured;
-  blackMoves = s.blackMoves;
-  whiteMoves = s.whiteMoves;
-  moveRecord = s.moveRecord;
-  animatingMove = null;
-  updateUI();
-  draw();
-  if (snapshots.length > 1) snapshots.pop();
-  viewingIdx = snapshots.length - 1;
-  updateNavUI();
-}
-
 function pass() {
   history.push({
     board: board.map((row) => [...row]),
@@ -694,13 +668,7 @@ canvas.addEventListener(
   { passive: false },
 );
 
-document.getElementById("newGameBtn").addEventListener("click", () => {
-  initBoard(SIZE);
-  showToast("新对局开始");
-});
-document.getElementById("undoBtn").addEventListener("click", undo);
-document.getElementById("passBtn").addEventListener("click", pass);
-document.getElementById("aiBtn").addEventListener("click", toggleAI);
+document.getElementById("newGameBtn").addEventListener("click", newGame);
 document
   .getElementById("recordPrevBtn")
   .addEventListener("click", () => goToSnapshot(viewingIdx - 1));
@@ -708,26 +676,10 @@ document
   .getElementById("recordNextBtn")
   .addEventListener("click", () => goToSnapshot(viewingIdx + 1));
 
-document.querySelectorAll(".size-btn").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    const size = parseInt(btn.dataset.size);
-    document
-      .querySelectorAll(".size-btn")
-      .forEach((b) => b.classList.remove("active"));
-    btn.classList.add("active");
-    initBoard(size);
-  });
-});
-
-// 键盘快捷键
 document.addEventListener("keydown", (e) => {
   if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
   const k = e.key.toLowerCase();
-  if (k === "u") undo();
-  else if (k === "n") {
-    initBoard(SIZE);
-    showToast("新对局开始");
-  } else if (k === "p") pass();
+  if (k === "n") newGame();
   else if (k === "arrowleft") goToSnapshot(viewingIdx - 1);
   else if (k === "arrowright") goToSnapshot(viewingIdx + 1);
 });

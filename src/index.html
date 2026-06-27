@@ -36,11 +36,13 @@
                         手</span
                     >
                     <span class="text-amber-200/20">|</span>
-                    <span
-                        ><span id="sizeLabel" class="text-amber-100"
-                            >19×19</span
-                        ></span
+                    <span id="sizeLabel" class="text-amber-100">19×19</span>
+                    <button
+                        class="btn !py-1 !px-2.5 text-xs !w-auto"
+                        id="newGameBtn"
                     >
+                        新对局
+                    </button>
                 </div>
             </header>
 
@@ -147,54 +149,6 @@
                             >
                         </div>
                     </div>
-
-                    <!-- 操作区：路数选择 → 开局 -->
-                    <div class="panel p-3">
-                        <div class="flex items-center justify-between">
-                            <div class="flex gap-1">
-                                <button
-                                    class="btn size-btn !px-2.5 !py-1 text-xs"
-                                    data-size="9"
-                                >
-                                    9
-                                </button>
-                                <button
-                                    class="btn size-btn !px-2.5 !py-1 text-xs"
-                                    data-size="13"
-                                >
-                                    13
-                                </button>
-                                <button
-                                    class="btn size-btn !px-2.5 !py-1 text-xs active"
-                                    data-size="19"
-                                >
-                                    19
-                                </button>
-                            </div>
-                            <span class="text-[10px] text-amber-200/20"
-                                >棋盘路数</span
-                            >
-                        </div>
-                        <button
-                            class="btn btn-primary w-full !py-1.5 text-sm mt-2"
-                            id="newGameBtn"
-                        >
-                            开始新对局
-                        </button>
-                    </div>
-
-                    <!-- 高频操作 -->
-                    <div class="flex gap-2">
-                        <button class="btn flex-1 !py-1.5 text-sm" id="undoBtn">
-                            ↩ 悔棋
-                        </button>
-                        <button class="btn flex-1 !py-1.5 text-sm" id="passBtn">
-                            Pass
-                        </button>
-                    </div>
-                    <button class="btn !py-1.5 text-sm" id="aiBtn">
-                        🤖 AI 对弈
-                    </button>
 
                     <!-- 棋谱 -->
                     <div

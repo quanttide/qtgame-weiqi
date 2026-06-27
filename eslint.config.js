@@ -16,7 +16,6 @@ export default [
       globals: {
         ...GLOBALS,
         aiSuggestMove: "readonly",
-        aiIsLegal: "readonly",
         canvas: "writable",
         ctx: "writable",
       },
