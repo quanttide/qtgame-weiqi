@@ -479,7 +479,52 @@
                 </div>
             </header>
 
-            <div class="ornament-line mb-6 md:mb-8"></div>
+            <div class="ornament-line mb-4 md:mb-5"></div>
+
+            <!-- 工具条：对局控制 + 棋盘尺寸 -->
+            <div class="flex items-center justify-center gap-3 mb-5 md:mb-6">
+                <div class="panel p-2.5 flex gap-2">
+                    <button
+                        class="btn btn-primary !py-2 !px-4 text-sm"
+                        id="newGameBtn"
+                    >
+                        新对局
+                    </button>
+                    <button class="btn !py-2 !px-4 text-sm" id="undoBtn">
+                        悔棋
+                    </button>
+                    <button class="btn !py-2 !px-4 text-sm" id="passBtn">
+                        虚着
+                    </button>
+                </div>
+                <div class="panel p-2.5 flex gap-1.5">
+                    <button
+                        class="btn size-btn !px-2.5 !py-1.5 text-xs"
+                        data-size="9"
+                    >
+                        9
+                    </button>
+                    <button
+                        class="btn size-btn !px-2.5 !py-1.5 text-xs"
+                        data-size="13"
+                    >
+                        13
+                    </button>
+                    <button
+                        class="btn size-btn !px-2.5 !py-1.5 text-xs active"
+                        data-size="19"
+                    >
+                        19
+                    </button>
+                </div>
+                <div
+                    class="hidden md:flex items-center gap-2 text-xs text-amber-200/60"
+                >
+                    <span><kbd>U</kbd>悔棋</span>
+                    <span><kbd>N</kbd>新局</span>
+                    <span><kbd>P</kbd>虚着</span>
+                </div>
+            </div>
 
             <!-- 主体布局 -->
             <div class="grid grid-cols-1 lg:grid-cols-[260px_1fr_260px] gap-5">
@@ -542,7 +587,7 @@
                     </div>
                 </aside>
 
-                <!-- 中央：棋盘 + 共享控制 -->
+                <!-- 中央：棋盘 -->
                 <div
                     class="flex flex-col gap-4 items-center order-1 lg:order-2"
                 >
@@ -560,54 +605,6 @@
                         <span class="text-xs text-amber-200/50"
                             >点击棋盘交叉点落子</span
                         >
-                    </div>
-                    <!-- 共享控制：对局 + 尺寸 + 快捷键 -->
-                    <div class="flex gap-3 w-full max-w-[720px]">
-                        <div class="panel p-4 flex-1">
-                            <div class="flex gap-2">
-                                <button
-                                    class="btn btn-primary flex-1"
-                                    id="newGameBtn"
-                                >
-                                    新对局
-                                </button>
-                                <button class="btn flex-1" id="undoBtn">
-                                    悔棋
-                                </button>
-                                <button class="btn flex-1" id="passBtn">
-                                    虚着
-                                </button>
-                            </div>
-                        </div>
-                        <div class="panel p-4">
-                            <div class="flex gap-1.5 h-full items-center">
-                                <button
-                                    class="btn size-btn !px-2 !py-1.5 !text-xs"
-                                    data-size="9"
-                                >
-                                    9
-                                </button>
-                                <button
-                                    class="btn size-btn !px-2 !py-1.5 !text-xs"
-                                    data-size="13"
-                                >
-                                    13
-                                </button>
-                                <button
-                                    class="btn size-btn !px-2 !py-1.5 !text-xs active"
-                                    data-size="19"
-                                >
-                                    19
-                                </button>
-                            </div>
-                        </div>
-                        <div
-                            class="panel p-4 hidden md:flex items-center gap-2 text-xs text-amber-200/60"
-                        >
-                            <span><kbd>U</kbd>悔棋</span>
-                            <span><kbd>N</kbd>新局</span>
-                            <span><kbd>P</kbd>虚着</span>
-                        </div>
                     </div>
                 </div>
 
