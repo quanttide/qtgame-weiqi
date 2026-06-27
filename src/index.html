@@ -199,6 +199,25 @@
             </footer>
         </main>
 
+        <div
+            id="resultOverlay"
+            class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+        >
+            <div class="panel p-6 text-center max-w-sm w-full mx-4">
+                <h2
+                    class="display-font text-2xl text-amber-100 mb-3"
+                    id="resultText"
+                ></h2>
+                <p
+                    class="text-xs text-amber-200/50 leading-relaxed mb-5"
+                    id="resultDetail"
+                ></p>
+                <button class="btn btn-primary !py-2" onclick="newGame()">
+                    再来一局
+                </button>
+            </div>
+        </div>
+
         <script src="main.js"></script>
         <script src="ai.js"></script>
     </body>

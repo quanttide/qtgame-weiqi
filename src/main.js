@@ -21,6 +21,9 @@ let snapshots = [];
 let viewingIdx = 0;
 let aiMode = true;
 let AI_PLAYER = 2; // AI 执白
+let consecutivePasses = 0;
+let gameOver = false;
+const KOMI = 7.5;
 
 function getState() {
   return {
@@ -87,6 +90,70 @@ function checkAIMove() {
     if (move) placeStone(move.x, move.y);
     else pass();
   }, 200);
+}
+
+function calculateScore() {
+  const visited = Array.from({ length: SIZE }, () => Array(SIZE).fill(false));
+  let blackTerritory = 0,
+    whiteTerritory = 0;
+  let blackStones = 0,
+    whiteStones = 0;
+
+  for (let y = 0; y < SIZE; y++) {
+    for (let x = 0; x < SIZE; x++) {
+      if (board[y][x] === 1) blackStones++;
+      else if (board[y][x] === 2) whiteStones++;
+      else if (board[y][x] === 0 && !visited[y][x]) {
+        const region = [];
+        const borders = new Set();
+        const queue = [[x, y]];
+        visited[y][x] = true;
+        while (queue.length) {
+          const [cx, cy] = queue.shift();
+          region.push([cx, cy]);
+          for (const [nx, ny] of getNeighbors(cx, cy)) {
+            if (board[ny][nx] === 0 && !visited[ny][nx]) {
+              visited[ny][nx] = true;
+              queue.push([nx, ny]);
+            } else if (board[ny][nx] === 1) borders.add("b");
+            else if (board[ny][nx] === 2) borders.add("w");
+          }
+        }
+        if (borders.size === 1) {
+          if (borders.has("b")) blackTerritory += region.length;
+          else whiteTerritory += region.length;
+        }
+      }
+    }
+  }
+
+  const blackTotal = blackStones + blackTerritory + blackCaptured;
+  const whiteTotal = whiteStones + whiteTerritory + whiteCaptured + KOMI;
+  return {
+    blackTotal,
+    whiteTotal,
+    blackStones,
+    blackTerritory,
+    whiteStones,
+    whiteTerritory,
+  };
+}
+
+function showResult(score) {
+  gameOver = true;
+  const winner = score.blackTotal > score.whiteTotal ? "黑" : "白";
+  const diff = Math.abs(score.blackTotal - score.whiteTotal);
+  const el = document.getElementById("resultOverlay");
+  document.getElementById("resultText").textContent =
+    `${winner}方胜 ${diff.toFixed(1)} 目`;
+  document.getElementById("resultDetail").textContent =
+    `黑 ${score.blackTotal.toFixed(1)} = 子${score.blackStones} + 空${score.blackTerritory} + 提${blackCaptured}  |  白 ${score.whiteTotal.toFixed(1)} = 子${score.whiteStones} + 空${score.whiteTerritory} + 提${whiteCaptured} + 贴${KOMI}`;
+  el.classList.remove("hidden");
+}
+
+function endGame() {
+  const score = calculateScore();
+  showResult(score);
 }
 
 // ============= 工具函数 =============
@@ -165,6 +232,9 @@ function initBoard(size) {
   whiteMoves = 0;
   moveRecord = [];
   animatingMove = null;
+  consecutivePasses = 0;
+  gameOver = false;
+  document.getElementById("resultOverlay").classList.add("hidden");
 
   const boardPixelSize = canvas.width;
   margin = boardPixelSize / (SIZE + 1.5);
@@ -430,6 +500,7 @@ function animateFrame() {
 
 // ============= 落子逻辑 =============
 function placeStone(x, y) {
+  if (gameOver) return false;
   if (x < 0 || x >= SIZE || y < 0 || y >= SIZE) return false;
   if (board[y][x] !== 0) {
     showToast("此处已有棋子", "error");
@@ -528,11 +599,13 @@ function placeStone(x, y) {
   updateUI();
   draw();
   saveSnapshot();
+  consecutivePasses = 0;
   checkAIMove();
   return true;
 }
 
 function pass() {
+  if (gameOver) return;
   history.push({
     board: board.map((row) => [...row]),
     currentPlayer,
@@ -557,6 +630,11 @@ function pass() {
   updateUI();
   draw();
   saveSnapshot();
+  consecutivePasses++;
+  if (consecutivePasses >= 2) {
+    endGame();
+    return;
+  }
   checkAIMove();
 }
 
