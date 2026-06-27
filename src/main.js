@@ -82,6 +82,20 @@ function newGame() {
 
 function checkAIMove() {
   if (!aiMode || currentPlayer !== AI_PLAYER) return;
+
+  // 用计分器判断 AI 是否还有活棋 → 避免被全包围还在往里下
+  if (moveRecord.length > 10 && typeof calculateScore === "function") {
+    const s = calculateScore();
+    const aiAlive = AI_PLAYER === 1 ? s.blackStones : s.whiteStones;
+    const aiTotal = AI_PLAYER === 1 ? s.blackTotal : s.whiteTotal;
+    const oppTotal = AI_PLAYER === 1 ? s.whiteTotal : s.blackTotal;
+    // 条件 A：活棋太少（被全包围）或 条件 B：分差过大且无法逆转
+    if (aiAlive < 5 || (aiTotal + 20 < oppTotal && aiAlive < 20)) {
+      pass();
+      return;
+    }
+  }
+
   const st = document.getElementById("statusText");
   if (st) st.textContent = "AI 思考中...";
   setTimeout(() => {
