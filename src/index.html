@@ -254,7 +254,9 @@
                 );
                 border-color: rgba(212, 160, 32, 0.6);
                 color: #ffd560;
-                box-shadow: inset 0 0 12px rgba(212, 160, 32, 0.15);
+                box-shadow:
+                    inset 0 0 12px rgba(212, 160, 32, 0.15),
+                    0 1px 0 rgba(212, 160, 32, 0.4);
             }
 
             /* 棋手指示器 */
@@ -545,13 +547,14 @@
                             class="flex items-center gap-1.5 px-3 py-1.5 bg-amber-200/5 border-t border-amber-200/10 text-xs"
                         >
                             <span
-                                class="w-1.5 h-1.5 rounded-full bg-red-500"
+                                id="currentDot"
+                                class="w-1.5 h-1.5 rounded-full bg-amber-900"
                             ></span>
                             <span class="text-amber-200/50">当前</span>
                             <span
                                 id="statusText"
                                 class="text-amber-100 font-bold"
-                                >黑方落子</span
+                                >黑方</span
                             >
                         </div>
                     </div>
@@ -597,7 +600,7 @@
                             ↩ 悔棋
                         </button>
                         <button class="btn flex-1 !py-1.5 text-sm" id="passBtn">
-                            ⏭ 虚着
+                            Pass
                         </button>
                     </div>
 
@@ -611,11 +614,27 @@
                             >
                                 棋谱
                             </h3>
-                            <span
-                                class="text-xs text-amber-200/40"
-                                id="recordCount"
-                                >0 手</span
-                            >
+                            <div class="flex items-center gap-2">
+                                <span
+                                    class="text-xs text-amber-200/40"
+                                    id="recordCount"
+                                    >0 手</span
+                                >
+                                <button
+                                    id="recordPrevBtn"
+                                    class="text-amber-200/30 hover:text-amber-100 text-xs px-1 leading-none"
+                                    disabled
+                                >
+                                    ‹
+                                </button>
+                                <button
+                                    id="recordNextBtn"
+                                    class="text-amber-200/30 hover:text-amber-100 text-xs px-1 leading-none"
+                                    disabled
+                                >
+                                    ›
+                                </button>
+                            </div>
                         </div>
                         <div
                             id="record"
@@ -654,6 +673,58 @@
             let moveRecord = [];
             let hoverPos = null;
             let animatingMove = null;
+            let snapshots = [];
+            let viewingIdx = 0;
+
+            function getState() {
+                return {
+                    board: board.map((row) => [...row]),
+                    currentPlayer,
+                    lastMove: lastMove ? { ...lastMove } : null,
+                    koPoint: koPoint ? { ...koPoint } : null,
+                    blackCaptured,
+                    whiteCaptured,
+                    blackMoves,
+                    whiteMoves,
+                    moveRecord: [...moveRecord],
+                };
+            }
+
+            function saveSnapshot() {
+                if (viewingIdx < snapshots.length - 1) {
+                    snapshots = snapshots.slice(0, viewingIdx + 1);
+                    history = history.slice(0, viewingIdx);
+                }
+                snapshots.push(getState());
+                viewingIdx = snapshots.length - 1;
+                updateNavUI();
+            }
+
+            function goToSnapshot(idx) {
+                if (idx < 0 || idx >= snapshots.length) return;
+                const s = snapshots[idx];
+                board = s.board.map((row) => [...row]);
+                currentPlayer = s.currentPlayer;
+                lastMove = s.lastMove ? { ...s.lastMove } : null;
+                koPoint = s.koPoint ? { ...s.koPoint } : null;
+                blackCaptured = s.blackCaptured;
+                whiteCaptured = s.whiteCaptured;
+                blackMoves = s.blackMoves;
+                whiteMoves = s.whiteMoves;
+                moveRecord = [...s.moveRecord];
+                viewingIdx = idx;
+                updateUI();
+                draw();
+                updateNavUI();
+            }
+
+            function updateNavUI() {
+                const prevBtn = document.getElementById("recordPrevBtn");
+                const nextBtn = document.getElementById("recordNextBtn");
+                if (prevBtn) prevBtn.disabled = viewingIdx <= 0;
+                if (nextBtn)
+                    nextBtn.disabled = viewingIdx >= snapshots.length - 1;
+            }
 
             // ============= 工具函数 =============
             function getStars(size) {
@@ -742,6 +813,9 @@
 
                 updateUI();
                 draw();
+                snapshots = [getState()];
+                viewingIdx = 0;
+                updateNavUI();
             }
 
             // ============= 绘制 =============
@@ -1108,6 +1182,7 @@
                 currentPlayer = opponent;
                 updateUI();
                 draw();
+                saveSnapshot();
                 return true;
             }
 
@@ -1129,6 +1204,9 @@
                 animatingMove = null;
                 updateUI();
                 draw();
+                if (snapshots.length > 1) snapshots.pop();
+                viewingIdx = snapshots.length - 1;
+                updateNavUI();
             }
 
             function pass() {
@@ -1157,6 +1235,7 @@
                 );
                 updateUI();
                 draw();
+                saveSnapshot();
             }
 
             // ============= UI 更新 =============
@@ -1177,6 +1256,9 @@
                     .classList.toggle("active", currentPlayer === 2);
                 const st = document.getElementById("statusText");
                 if (st) st.textContent = currentPlayer === 1 ? "黑方" : "白方";
+                const dot = document.getElementById("currentDot");
+                if (dot)
+                    dot.className = `w-1.5 h-1.5 rounded-full ${currentPlayer === 1 ? "bg-amber-900" : "bg-amber-100"}`;
 
                 const recordEl = document.getElementById("record");
                 document.getElementById("recordCount").textContent =
@@ -1275,6 +1357,12 @@
                 });
             document.getElementById("undoBtn").addEventListener("click", undo);
             document.getElementById("passBtn").addEventListener("click", pass);
+            document
+                .getElementById("recordPrevBtn")
+                .addEventListener("click", () => goToSnapshot(viewingIdx - 1));
+            document
+                .getElementById("recordNextBtn")
+                .addEventListener("click", () => goToSnapshot(viewingIdx + 1));
 
             document.querySelectorAll(".size-btn").forEach((btn) => {
                 btn.addEventListener("click", () => {
@@ -1299,7 +1387,9 @@
                 else if (k === "n") {
                     initBoard(SIZE);
                     showToast("新对局开始");
-                } else if (k === "p") pass();
+                else if (k === "p") pass();
+                else if (k === "arrowleft") goToSnapshot(viewingIdx - 1);
+                else if (k === "arrowright") goToSnapshot(viewingIdx + 1);
             });
 
             // 启动
