@@ -79,51 +79,57 @@ function aiEvaluate(x, y) {
     }
   }
 
-  // ---- 开局占星位/小目（前40手） ----
-  if (totalMoves < 40) {
-    const stars = getStars(SIZE);
-    if (stars.some(([sx, sy]) => sx === x && sy === y)) score += 30;
-    // 小目（4-4 和 3-4 附近）
-    if (
-      (x === 3 && y === 3) ||
-      (x === 3 && y === SIZE - 4) ||
-      (x === SIZE - 4 && y === 3) ||
-      (x === SIZE - 4 && y === SIZE - 4)
-    )
-      score += 25;
-    if (
-      (x === 3 && y === 4) ||
-      (x === 4 && y === 3) ||
-      (x === 3 && y === SIZE - 5) ||
-      (x === 4 && y === SIZE - 4) ||
-      (x === SIZE - 5 && y === 3) ||
-      (x === SIZE - 4 && y === 4) ||
-      (x === SIZE - 5 && y === SIZE - 4) ||
-      (x === SIZE - 4 && y === SIZE - 5)
-    )
-      score += 20;
+  // ---- 位置质量：距离边界的层数 ----
+  const d = Math.min(x, y, SIZE - 1 - x, SIZE - 1 - y);
+  if (totalMoves < 50) {
+    // d=0 一路，d=1 二路，d=2 三路，d=3 四路 ...
+    if (d >= 3)
+      score += 12; // 四路及以上：好位置
+    else if (d === 2)
+      score += 8; // 三路：不错
+    else if (d === 1) score += 2; // 二路：可接受
+    // d === 0 不给加分也不减分（靠其他评分决定）
   }
 
-  // ---- 靠近己方活棋扩张 ----
-  for (const [nx, ny] of getNeighbors(x, y)) {
-    if (board[ny][nx] === p) {
-      const g = getGroup(nx, ny, board);
-      if (g && g.liberties >= 3) score += 10;
+  // ---- 靠近己方棋子（扩张/连接） ----
+  let ownAdj = 0;
+  let ownDist2 = 0;
+  for (let dy = -2; dy <= 2; dy++) {
+    for (let dx = -2; dx <= 2; dx++) {
+      if (dx === 0 && dy === 0) continue;
+      const nx = x + dx,
+        ny = y + dy;
+      if (nx < 0 || nx >= SIZE || ny < 0 || ny >= SIZE) continue;
+      if (board[ny][nx] !== p) continue;
+      const dist = Math.abs(dx) + Math.abs(dy);
+      if (dist === 1) ownAdj++;
+      else ownDist2++;
+    }
+  }
+  // 紧邻己方棋子：+6/子，但最多 +18（鼓励但不重复）
+  score += Math.min(ownAdj * 6, 18);
+  // 间隔一格的己方棋子：+3/子，鼓励扩张而非过度聚集
+  score += Math.min(ownDist2 * 3, 12);
+
+  // ---- 远离对方强棋 ----
+  for (let dy = -1; dy <= 1; dy++) {
+    for (let dx = -1; dx <= 1; dx++) {
+      if (dx === 0 && dy === 0) continue;
+      const nx = x + dx,
+        ny = y + dy;
+      if (nx < 0 || nx >= SIZE || ny < 0 || ny >= SIZE) continue;
+      if (board[ny][nx] === opp) {
+        const g = getGroup(nx, ny, board);
+        if (g && g.liberties >= 4) score -= 20; // 对方强棋附近
+      }
     }
   }
 
-  // ---- 开局避免走一二路（前20手） ----
-  if (totalMoves < 20) {
-    if (x === 0 || x === SIZE - 1 || y === 0 || y === SIZE - 1) score -= 20;
-    else if (x === 1 || x === SIZE - 2 || y === 1 || y === SIZE - 2) score -= 8;
-  }
-
-  // ---- 靠近对方强棋 → 送吃 ----
-  for (const [nx, ny] of getNeighbors(x, y)) {
-    if (board[ny][nx] === opp) {
-      const g = getGroup(nx, ny, board);
-      if (g && g.liberties >= 4) score -= 25;
-    }
+  // ---- 中盘后向中央发展 ----
+  if (totalMoves > 50) {
+    const center = (SIZE - 1) / 2;
+    const distFromCenter = Math.abs(x - center) + Math.abs(y - center);
+    score += Math.max(0, (SIZE - distFromCenter) * 0.5);
   }
 
   return score;
