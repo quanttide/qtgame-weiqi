@@ -464,160 +464,152 @@
                     </div>
                 </div>
 
-                <!-- 右栏：信息 + 控制 + 棋谱 -->
-                <aside class="flex flex-col gap-3 order-2">
-                    <!-- 黑方 -->
-                    <div class="panel p-4">
-                        <h3 class="text-xs tracking-[0.3em] text-amber-200/40">
-                            BLACK · 黑方
-                        </h3>
-                        <div class="flex items-center gap-3 mt-3">
+                <!-- 右栏：控制台 -->
+                <aside class="flex flex-col gap-2.5 order-2">
+                    <!-- 棋手状态（紧凑对比） -->
+                    <div class="panel overflow-hidden">
+                        <div class="grid grid-cols-2">
                             <div
-                                id="blackIndicator"
-                                class="player-indicator black active !w-10 !h-10"
-                            ></div>
-                            <div class="flex-1">
-                                <div
-                                    class="text-lg display-font text-amber-100"
-                                >
-                                    玄
+                                class="p-3 border-r border-amber-200/10"
+                                id="blackPanel"
+                            >
+                                <div class="flex items-center gap-1.5">
+                                    <div
+                                        id="blackIndicator"
+                                        class="player-indicator black active !w-7 !h-7"
+                                    ></div>
+                                    <span
+                                        class="display-font text-sm text-amber-100"
+                                        >玄</span
+                                    >
+                                    <span
+                                        class="text-[10px] text-amber-200/30 ml-auto"
+                                        >黑</span
+                                    >
                                 </div>
-                                <div class="text-xs text-amber-200/50">
-                                    执黑先行
+                                <div class="flex gap-2.5 mt-1.5 text-xs">
+                                    <span class="text-amber-200/40"
+                                        >提
+                                        <b
+                                            id="blackCaptured"
+                                            class="text-amber-100 font-bold"
+                                            >0</b
+                                        ></span
+                                    >
+                                    <span class="text-amber-200/40"
+                                        >手
+                                        <b
+                                            id="blackMoves"
+                                            class="text-amber-100 font-bold"
+                                            >0</b
+                                        ></span
+                                    >
                                 </div>
                             </div>
-                            <div class="text-right">
-                                <div class="text-[10px] text-amber-200/40">
-                                    提子
+                            <div class="p-3" id="whitePanel">
+                                <div class="flex items-center gap-1.5">
+                                    <div
+                                        id="whiteIndicator"
+                                        class="player-indicator white !w-7 !h-7"
+                                    ></div>
+                                    <span
+                                        class="display-font text-sm text-amber-100"
+                                        >素</span
+                                    >
+                                    <span
+                                        class="text-[10px] text-amber-200/30 ml-auto"
+                                        >白</span
+                                    >
                                 </div>
-                                <div
-                                    class="text-lg font-bold text-amber-100"
-                                    id="blackCaptured"
-                                >
-                                    0
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <div class="text-[10px] text-amber-200/40">
-                                    手数
-                                </div>
-                                <div
-                                    class="text-lg font-bold text-amber-100"
-                                    id="blackMoves"
-                                >
-                                    0
+                                <div class="flex gap-2.5 mt-1.5 text-xs">
+                                    <span class="text-amber-200/40"
+                                        >提
+                                        <b
+                                            id="whiteCaptured"
+                                            class="text-amber-100 font-bold"
+                                            >0</b
+                                        ></span
+                                    >
+                                    <span class="text-amber-200/40"
+                                        >手
+                                        <b
+                                            id="whiteMoves"
+                                            class="text-amber-100 font-bold"
+                                            >0</b
+                                        ></span
+                                    >
                                 </div>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- 白方 -->
-                    <div class="panel p-4">
-                        <h3 class="text-xs tracking-[0.3em] text-amber-200/40">
-                            WHITE · 白方
-                        </h3>
-                        <div class="flex items-center gap-3 mt-3">
-                            <div
-                                id="whiteIndicator"
-                                class="player-indicator white !w-10 !h-10"
-                            ></div>
-                            <div class="flex-1">
-                                <div
-                                    class="text-lg display-font text-amber-100"
-                                >
-                                    素
-                                </div>
-                                <div class="text-xs text-amber-200/50">
-                                    执白后行
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <div class="text-[10px] text-amber-200/40">
-                                    提子
-                                </div>
-                                <div
-                                    class="text-lg font-bold text-amber-100"
-                                    id="whiteCaptured"
-                                >
-                                    0
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <div class="text-[10px] text-amber-200/40">
-                                    手数
-                                </div>
-                                <div
-                                    class="text-lg font-bold text-amber-100"
-                                    id="whiteMoves"
-                                >
-                                    0
-                                </div>
-                            </div>
+                        <div
+                            class="flex items-center gap-1.5 px-3 py-1.5 bg-amber-200/5 border-t border-amber-200/10 text-xs"
+                        >
+                            <span
+                                class="w-1.5 h-1.5 rounded-full bg-red-500"
+                            ></span>
+                            <span class="text-amber-200/50">当前</span>
+                            <span
+                                id="statusText"
+                                class="text-amber-100 font-bold"
+                                >黑方落子</span
+                            >
                         </div>
                     </div>
 
-                    <!-- 控制 -->
-                    <div class="panel p-3 flex gap-2">
+                    <!-- 操作区：路数选择 → 开局 -->
+                    <div class="panel p-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex gap-1">
+                                <button
+                                    class="btn size-btn !px-2.5 !py-1 text-xs"
+                                    data-size="9"
+                                >
+                                    9
+                                </button>
+                                <button
+                                    class="btn size-btn !px-2.5 !py-1 text-xs"
+                                    data-size="13"
+                                >
+                                    13
+                                </button>
+                                <button
+                                    class="btn size-btn !px-2.5 !py-1 text-xs active"
+                                    data-size="19"
+                                >
+                                    19
+                                </button>
+                            </div>
+                            <span class="text-[10px] text-amber-200/20"
+                                >棋盘路数</span
+                            >
+                        </div>
                         <button
-                            class="btn btn-primary !py-2 !px-3 text-sm flex-1"
+                            class="btn btn-primary w-full !py-1.5 text-sm mt-2"
                             id="newGameBtn"
                         >
-                            新对局
-                        </button>
-                        <button
-                            class="btn !py-2 !px-3 text-sm flex-1"
-                            id="undoBtn"
-                        >
-                            悔棋
-                        </button>
-                        <button
-                            class="btn !py-2 !px-3 text-sm flex-1"
-                            id="passBtn"
-                        >
-                            虚着
+                            开始新对局
                         </button>
                     </div>
 
-                    <!-- 棋盘尺寸 + 快捷键 -->
-                    <div class="flex gap-2 items-center">
-                        <div
-                            class="panel p-2.5 flex gap-1.5 flex-1 justify-center"
-                        >
-                            <button
-                                class="btn size-btn !px-3 !py-1.5 text-xs"
-                                data-size="9"
-                            >
-                                9
-                            </button>
-                            <button
-                                class="btn size-btn !px-3 !py-1.5 text-xs"
-                                data-size="13"
-                            >
-                                13
-                            </button>
-                            <button
-                                class="btn size-btn !px-3 !py-1.5 text-xs active"
-                                data-size="19"
-                            >
-                                19
-                            </button>
-                        </div>
-                        <div
-                            class="hidden md:flex items-center gap-1.5 text-xs text-amber-200/60"
-                        >
-                            <span><kbd>U</kbd>悔棋</span>
-                            <span><kbd>N</kbd>新局</span>
-                            <span><kbd>P</kbd>虚着</span>
-                        </div>
+                    <!-- 高频操作 -->
+                    <div class="flex gap-2">
+                        <button class="btn flex-1 !py-1.5 text-sm" id="undoBtn">
+                            ↩ 悔棋
+                        </button>
+                        <button class="btn flex-1 !py-1.5 text-sm" id="passBtn">
+                            ⏭ 虚着
+                        </button>
                     </div>
 
                     <!-- 棋谱 -->
-                    <div class="panel p-4 flex-1 overflow-hidden">
-                        <div class="flex items-center justify-between mb-3">
+                    <div
+                        class="panel p-3 flex-1 overflow-hidden flex flex-col min-h-0"
+                    >
+                        <div class="flex items-center justify-between mb-2">
                             <h3
-                                class="text-xs tracking-[0.3em] text-amber-200/40"
+                                class="text-[10px] tracking-[0.3em] text-amber-200/40"
                             >
-                                RECORD · 棋谱
+                                棋谱
                             </h3>
                             <span
                                 class="text-xs text-amber-200/40"
@@ -627,11 +619,9 @@
                         </div>
                         <div
                             id="record"
-                            class="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto text-sm"
+                            class="flex flex-wrap gap-1 overflow-y-auto text-xs leading-relaxed"
                         >
-                            <span class="text-amber-200/30 text-xs"
-                                >尚无落子，请黑方先行...</span
-                            >
+                            <span class="text-amber-200/20">尚无落子...</span>
                         </div>
                     </div>
                 </aside>
@@ -1185,6 +1175,8 @@
                 document
                     .getElementById("whiteIndicator")
                     .classList.toggle("active", currentPlayer === 2);
+                const st = document.getElementById("statusText");
+                if (st) st.textContent = currentPlayer === 1 ? "黑方" : "白方";
 
                 const recordEl = document.getElementById("record");
                 document.getElementById("recordCount").textContent =
