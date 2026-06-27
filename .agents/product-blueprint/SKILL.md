@@ -39,6 +39,7 @@ argument-hint: "[product|design|architecture]"
 |------|------|---------|
 | 产品 | `product.md` | 做的是不是用户要的？ |
 | 设计 | `design.md` | 体验是否到位？ |
+| 设计语言 | `design-language.md` | 布局与交互原则是什么？ |
 | 技术 | `architecture.md` | 做得对不对？ |
 
 ## 使用方式
