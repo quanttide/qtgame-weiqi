@@ -417,20 +417,6 @@
                 border-color: rgba(107, 142, 78, 0.6);
                 color: #c0e0a0;
             }
-
-            /* 棋盘下方状态条 */
-            .status-bar {
-                background: linear-gradient(
-                    180deg,
-                    rgba(26, 18, 9, 0.6),
-                    rgba(15, 10, 7, 0.4)
-                );
-                border: 1px solid rgba(212, 167, 106, 0.15);
-                border-radius: 10px;
-                padding: 12px 20px;
-                text-align: center;
-                backdrop-filter: blur(10px);
-            }
         </style>
     </head>
     <body class="bg-texture">
@@ -440,42 +426,30 @@
 
         <main class="relative z-10 max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8">
             <!-- 标题区 -->
-            <header
-                class="flex items-end justify-between mb-6 md:mb-8 flex-wrap gap-4"
-            >
-                <div>
-                    <div
-                        class="text-xs tracking-[0.5em] text-amber-200/40 mb-2"
-                    >
-                        MO YI · GO BOARD
-                    </div>
-                    <h1
-                        class="display-font text-5xl md:text-6xl text-amber-100"
-                        style="
-                            letter-spacing: 0.12em;
-                            text-shadow: 0 2px 20px rgba(212, 167, 106, 0.3);
-                        "
-                    >
-                        墨弈
-                    </h1>
-                    <p class="text-sm text-amber-200/50 mt-2 tracking-wider">
-                        一子千秋 · 黑白方寸
-                    </p>
-                </div>
-                <div class="text-right">
-                    <div class="text-xs text-amber-200/40 tracking-wider">
-                        第
-                        <span
-                            id="moveNum"
-                            class="text-amber-100 font-bold text-base"
+            <header class="flex items-center justify-between mb-5">
+                <h1
+                    class="display-font text-3xl md:text-4xl text-amber-100"
+                    style="
+                        letter-spacing: 0.12em;
+                        text-shadow: 0 2px 20px rgba(212, 167, 106, 0.3);
+                    "
+                >
+                    墨弈
+                </h1>
+                <div class="flex items-center gap-3 text-xs text-amber-200/50">
+                    <span
+                        >第
+                        <span id="moveNum" class="text-amber-100 font-bold"
                             >0</span
                         >
-                        手
-                    </div>
-                    <div class="text-xs text-amber-200/40 mt-1 tracking-wider">
-                        棋盘
-                        <span id="sizeLabel" class="text-amber-100">19×19</span>
-                    </div>
+                        手</span
+                    >
+                    <span class="text-amber-200/20">|</span>
+                    <span
+                        ><span id="sizeLabel" class="text-amber-100"
+                            >19×19</span
+                        ></span
+                    >
                 </div>
             </header>
 
@@ -484,21 +458,9 @@
             <!-- 两栏：棋盘 | 信息+控制+棋谱 -->
             <div class="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-5">
                 <!-- 左栏：棋盘 -->
-                <div class="flex flex-col gap-4 items-center order-1">
+                <div class="flex flex-col items-center order-1">
                     <div class="board-wrap">
                         <canvas id="board" width="720" height="720"></canvas>
-                    </div>
-                    <div class="status-bar w-full max-w-[720px]">
-                        <span class="text-sm text-amber-200/50">当前 · </span>
-                        <span
-                            id="statusText"
-                            class="status-text text-base font-bold text-amber-100"
-                            >黑方落子</span
-                        >
-                        <span class="text-sm text-amber-200/30 mx-3">|</span>
-                        <span class="text-xs text-amber-200/50"
-                            >点击棋盘交叉点落子</span
-                        >
                     </div>
                 </div>
 
@@ -1223,8 +1185,6 @@
                 document
                     .getElementById("whiteIndicator")
                     .classList.toggle("active", currentPlayer === 2);
-                document.getElementById("statusText").textContent =
-                    currentPlayer === 1 ? "黑方落子" : "白方落子";
 
                 const recordEl = document.getElementById("record");
                 document.getElementById("recordCount").textContent =
